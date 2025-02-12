@@ -77,7 +77,9 @@ resource "aws_autoscaling_group" "ec2_ecs" {
   }
 
   max_size = 30 # TODO: make this configurable
-  min_size = 3
+
+  # Minimum of one EC2 VM per zone
+  min_size = length(var.ec2_vpc_zone_identifier)
 
   protect_from_scale_in = true
 

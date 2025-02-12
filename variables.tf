@@ -7,7 +7,7 @@ variable "control_plane_region" {
 }
 
 variable "ec2_instance_type" {
-  description = "The isntance type for ec2 ecs instances"
+  description = "The instance type for ec2 ecs instances"
 }
 
 variable "ec2_vpc_zone_identifier" {
@@ -25,6 +25,6 @@ variable "ecs_service_vpc_id" {
 }
 
 variable "ecs_subnet_ids" {
-  description = "Subnets associated with the warpstream service"
+  description = "Subnets associated with the warpstream ecs service"
   type        = list(string)
 }

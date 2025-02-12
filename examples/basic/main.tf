@@ -8,6 +8,8 @@ provider "aws" {
   region = local.region
 }
 
+# Creating a VPC for this example, you can bring your own VPC
+# if you already have one and don't need to use the one created here.
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.18.1"
@@ -32,6 +34,8 @@ module "vpc" {
   ]
 }
 
+# It is highly recommended to create a S3 Gateway endpoint in your VPC.
+# This is prevent S3 network traffic from egressing over your NAT Gateway and increasing costs.
 module "endpoints" {
   source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
   version = "5.18.1"
@@ -41,6 +45,9 @@ module "endpoints" {
   create_security_group      = true
   security_group_name_prefix = "${local.name}-vpc-endpoints-"
   security_group_description = "VPC endpoint security group"
+
+  # Security group for the endpoints.
+  # We are allowing everything in the VPC to connect to the S3 endpoint.
   security_group_rules = {
     ingress_https = {
       description = "HTTPS from VPC"
@@ -66,8 +73,13 @@ module "warpstream" {
 
   ec2_instance_type               = "m6in.xlarge"
   ec2_instance_security_group_ids = [module.vpc.default_security_group_id]
-  ec2_vpc_zone_identifier         = module.vpc.private_subnets
 
+  # List of subnet IDs to launch ESC ec2 VMs in. 
+  # Subnets automatically determine which availability zones the group will reside.
+  ec2_vpc_zone_identifier = module.vpc.private_subnets
+
+  # The VPC and subnet IDs that the warpstream ECS service runs on
+  # The subnets can be different then the ec2_vpc_zone_identifier
   ecs_service_vpc_id = module.vpc.vpc_id
   ecs_subnet_ids     = module.vpc.private_subnets
 }

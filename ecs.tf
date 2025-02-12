@@ -124,7 +124,7 @@ resource "aws_ecs_task_definition" "service" {
   container_definitions = jsonencode([
     {
       name : "warpstream-agent",
-      image : "public.ecr.aws/warpstream-labs/warpstream_agent:latest",
+      image : "public.ecr.aws/warpstream-labs/warpstream_agent:latest", # TODO: make this a variable with the default version same as helm
       logConfiguration : {
         logDriver : "awslogs",
         options : {
@@ -223,7 +223,7 @@ resource "aws_ecs_service" "service" {
   cluster         = aws_ecs_cluster.ecs.id
   task_definition = aws_ecs_task_definition.service.arn
 
-  desired_count                      = 3
+  desired_count                      = length(var.ecs_subnet_ids) # Minimum of one service container per zone
   deployment_minimum_healthy_percent = "66"
   deployment_maximum_percent         = "200"
 
@@ -243,8 +243,8 @@ resource "aws_ecs_service" "service" {
 }
 
 resource "aws_appautoscaling_target" "dev_to_target" {
-  max_capacity       = 30 # TODO: configurable
-  min_capacity       = 3
+  max_capacity       = 30                         # TODO: configurable
+  min_capacity       = length(var.ecs_subnet_ids) # Minimum of one service container per zone
   resource_id        = "service/${aws_ecs_cluster.ecs.name}/${aws_ecs_service.service.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"

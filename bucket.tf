@@ -18,9 +18,26 @@ resource "aws_s3_bucket_ownership_controls" "bucket" {
   }
 }
 
-resource "aws_s3_bucket_acl" "example" {
+resource "aws_s3_bucket_acl" "bucket" {
   depends_on = [aws_s3_bucket_ownership_controls.bucket]
 
   bucket = aws_s3_bucket.bucket.id
   acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "bucket" {
+  bucket = aws_s3_bucket.bucket.id
+
+  # Automatically cancel all multi-part uploads after 7d so we don't accumulate an infinite
+  # number of partial uploads.
+  rule {
+    id     = "7d multi-part"
+    status = "Enabled"
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+
+  # No other lifecycle policy. The WarpStream Agent will automatically clean up and
+  # deleted expired files.
 }
