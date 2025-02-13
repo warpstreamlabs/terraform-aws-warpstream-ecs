@@ -71,6 +71,8 @@ module "warpstream" {
   cluster_name         = local.name
   control_plane_region = local.region
 
+  # We recommend network optimized instances with a minimum of 4 vCPUs to get the best performance.
+  # We have also tested with Graviton3+ and found decent performance. 
   ec2_instance_type               = "m6in.xlarge"
   ec2_instance_security_group_ids = [module.vpc.default_security_group_id]
 

@@ -39,3 +39,9 @@ variable "ecs_subnet_ids" {
   description = "Subnets associated with the warpstream ecs service"
   type        = list(string)
 }
+
+variable "disable_default_warpstream_agent_egress" {
+  description = "Disable the default egress rule allowing the WarpStream Agent to egress to 0.0.0.0/0"
+  type        = bool
+  default     = false
+}

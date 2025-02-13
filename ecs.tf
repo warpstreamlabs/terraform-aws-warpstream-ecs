@@ -208,8 +208,8 @@ resource "aws_vpc_security_group_ingress_rule" "allow_agent_to_agent_kafka" {
   referenced_security_group_id = aws_security_group.ecs_service.id
 }
 
-# TODO: Allow disabling of this
 resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
+  count             = var.disable_default_warpstream_agent_egress ? 0 : 1
   security_group_id = aws_security_group.ecs_service.id
   description       = "Allow Agent to Egress"
 
