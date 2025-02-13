@@ -45,3 +45,8 @@ variable "disable_default_warpstream_agent_egress" {
   type        = bool
   default     = false
 }
+
+variable "ecs_service_additional_security_group_ids" {
+  description = "Security group IDs for ecs service"
+  type        = list(string)
+}

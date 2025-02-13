@@ -26,6 +26,7 @@ module "vpc" {
   single_nat_gateway     = false
   one_nat_gateway_per_az = true
 
+  # Default security group in the VPC to allow all egressing.
   default_security_group_egress = [
     {
       description = "Allow all egress"
@@ -65,6 +66,24 @@ module "endpoints" {
   }
 }
 
+# Creating a security group to allow things in the VPC
+# to connect to the WarpStream Agents.
+resource "aws_security_group" "warpstream-connect" {
+  name        = "${local.name}-connect"
+  description = "Allow things the VPC to connect to the WarpStream Kafka Port"
+  vpc_id      = module.vpc.vpc_id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "allow_agent_to_agent_http" {
+  security_group_id = aws_security_group.warpstream-connect.id
+  description       = "Allow Server to Agent Kafka Communication"
+
+  ip_protocol = "tcp"
+  from_port   = 9092
+  to_port     = 9092
+  cidr_ipv4   = "10.0.0.0/16"
+}
+
 module "warpstream" {
   source = "../.."
 
@@ -73,7 +92,9 @@ module "warpstream" {
 
   # We recommend network optimized instances with a minimum of 4 vCPUs to get the best performance.
   # We have also tested with Graviton3+ and found decent performance. 
-  ec2_instance_type               = "m6in.xlarge"
+  ec2_instance_type = "m6in.xlarge"
+
+  # Add the default VPC security group to the ECS EC2 instances.
   ec2_instance_security_group_ids = [module.vpc.default_security_group_id]
 
   # List of subnet IDs to launch ESC ec2 VMs in. 
@@ -84,4 +105,7 @@ module "warpstream" {
   # The subnets can be different then the ec2_vpc_zone_identifier
   ecs_service_vpc_id = module.vpc.vpc_id
   ecs_subnet_ids     = module.vpc.private_subnets
+
+  # Specifying the security group to allow things in the VPC to connect to WarpStream agents.
+  ecs_service_additional_security_group_ids = [aws_security_group.warpstream-connect.id]
 }

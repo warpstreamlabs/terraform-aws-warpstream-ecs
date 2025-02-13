@@ -233,7 +233,7 @@ resource "aws_ecs_service" "service" {
 
   network_configuration {
     subnets          = var.ecs_subnet_ids
-    security_groups  = [aws_security_group.ecs_service.id] # TODO: take in additional SG's
+    security_groups  = concat([aws_security_group.ecs_service.id], var.ecs_service_additional_security_group_ids)
     assign_public_ip = false
   }
 
