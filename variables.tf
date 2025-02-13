@@ -2,6 +2,17 @@ variable "cluster_name" {
   description = "The warpstream cluster name"
 }
 
+variable "warpstream_agent_version" {
+  description = "The version of the warpstream agent to deploy"
+  type        = string
+  default     = "v625"
+}
+
+variable "ecs_service_max_capacity" {
+  description = "The maximum number of warpstream agent replicas to autoscale up to"
+  default     = 30
+}
+
 variable "control_plane_region" {
   description = "The region of the warpstream control plane"
 }

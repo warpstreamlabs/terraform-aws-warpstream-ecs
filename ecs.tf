@@ -19,7 +19,7 @@ resource "aws_ecs_capacity_provider" "ecs" {
       maximum_scaling_step_size = 1000
       minimum_scaling_step_size = 1
       status                    = "ENABLED"
-      target_capacity           = 30 # TODO: make this configurable
+      target_capacity           = var.ecs_service_max_capacity
     }
   }
 }
@@ -124,7 +124,7 @@ resource "aws_ecs_task_definition" "service" {
   container_definitions = jsonencode([
     {
       name : "warpstream-agent",
-      image : "public.ecr.aws/warpstream-labs/warpstream_agent:latest", # TODO: make this a variable with the default version same as helm
+      image : "public.ecr.aws/warpstream-labs/warpstream_agent:${var.warpstream_agent_version}",
       logConfiguration : {
         logDriver : "awslogs",
         options : {
@@ -243,7 +243,7 @@ resource "aws_ecs_service" "service" {
 }
 
 resource "aws_appautoscaling_target" "dev_to_target" {
-  max_capacity       = 30                         # TODO: configurable
+  max_capacity       = var.ecs_service_max_capacity
   min_capacity       = length(var.ecs_subnet_ids) # Minimum of one service container per zone
   resource_id        = "service/${aws_ecs_cluster.ecs.name}/${aws_ecs_service.service.name}"
   scalable_dimension = "ecs:service:DesiredCount"
