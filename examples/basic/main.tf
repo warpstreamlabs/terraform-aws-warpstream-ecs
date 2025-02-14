@@ -84,11 +84,24 @@ resource "aws_vpc_security_group_ingress_rule" "allow_agent_to_agent_http" {
   cidr_ipv4   = "10.0.0.0/16"
 }
 
+# Store the WarpStream Agent Key in AWS Secret Manager
+resource "aws_secretsmanager_secret" "warpstream_agent_key" {
+  name = "${local.name}-agent-key"
+}
+
+resource "aws_secretsmanager_secret_version" "warpstream_agent_key" {
+  secret_id     = aws_secretsmanager_secret.warpstream_agent_key.id
+  secret_string = "aks_bc60867eaeaf8c6ca2bfe6effada872ea9e8d756a162960557bf70244d4f4fb3" # TODO: make this a input variable
+}
+
 module "warpstream" {
   source = "../.."
 
   cluster_name         = local.name
   control_plane_region = local.region
+
+  warpstream_virtual_cluster_id           = "vci_59c955ec_b892_4c7f_881b_54bc34133711"
+  warpstream_agent_key_secret_manager_arn = aws_secretsmanager_secret_version.warpstream_agent_key.arn
 
   # We recommend network optimized instances with a minimum of 4 vCPUs to get the best performance.
   # We have also tested with Graviton3+ and found decent performance. 

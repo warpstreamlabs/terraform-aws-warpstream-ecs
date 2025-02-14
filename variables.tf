@@ -8,6 +8,16 @@ variable "warpstream_agent_version" {
   default     = "v625"
 }
 
+variable "warpstream_virtual_cluster_id" {
+  description = "The warpstream virtual cluster ID"
+  type        = string
+}
+
+variable "warpstream_agent_key_secret_manager_arn" {
+  description = "The ARN of the secret manager secret version for the warpstream agent key"
+  type        = string
+}
+
 variable "ecs_service_max_capacity" {
   description = "The maximum number of warpstream agent replicas to autoscale up to"
   default     = 30

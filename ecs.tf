@@ -47,6 +47,21 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+data "aws_iam_policy_document" "ecs_task_execution_agent_key_sm" {
+  statement {
+    effect    = "Allow"
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = [var.warpstream_agent_key_secret_manager_arn]
+  }
+}
+
+resource "aws_iam_role_policy" "ecs_task_execution_agent_key_sm" {
+  name = "${var.cluster_name}-ecs-task-execution-agent-key-sm"
+  role = aws_iam_role.ecs_task_execution.id
+
+  policy = data.aws_iam_policy_document.ecs_task_execution_agent_key_sm.json
+}
+
 data "aws_iam_policy_document" "ecs_task" {
   statement {
     effect = "Allow"
@@ -167,17 +182,17 @@ resource "aws_ecs_task_definition" "service" {
         },
         {
           name : "WARPSTREAM_DEFAULT_VIRTUAL_CLUSTER_ID",
-          value : "vci_59c955ec_b892_4c7f_881b_54bc34133711" # TODO: take these in as vars
+          value : var.warpstream_virtual_cluster_id
         },
         {
           name : "WARPSTREAM_REGION",
           value : var.control_plane_region
         },
-        {
-          name : "WARPSTREAM_AGENT_KEY",
-          value : "aks_bc60867eaeaf8c6ca2bfe6effada872ea9e8d756a162960557bf70244d4f4fb3" # TODO: take these in as vars
-        }
-      ]
+      ],
+      secrets : [{
+        name : "WARPSTREAM_AGENT_KEY",
+        valueFrom : var.warpstream_agent_key_secret_manager_arn
+      }]
     }
   ])
 }
