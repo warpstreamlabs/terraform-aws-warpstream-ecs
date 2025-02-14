@@ -4,6 +4,17 @@ locals {
   region = "us-east-1"
 }
 
+variable "warpstream_virtual_cluster_id" {
+  description = "The warpstream virtual cluster id"
+  type        = string
+}
+
+variable "warpstream_agent_key" {
+  description = "The agent key for the warpstream cluster"
+  type        = string
+  sensitive   = true
+}
+
 provider "aws" {
   region = local.region
 }
@@ -91,7 +102,7 @@ resource "aws_secretsmanager_secret" "warpstream_agent_key" {
 
 resource "aws_secretsmanager_secret_version" "warpstream_agent_key" {
   secret_id     = aws_secretsmanager_secret.warpstream_agent_key.id
-  secret_string = "aks_bc60867eaeaf8c6ca2bfe6effada872ea9e8d756a162960557bf70244d4f4fb3" # TODO: make this a input variable
+  secret_string = var.warpstream_agent_key
 }
 
 module "warpstream" {
@@ -100,24 +111,28 @@ module "warpstream" {
   cluster_name         = local.name
   control_plane_region = local.region
 
-  warpstream_virtual_cluster_id           = "vci_59c955ec_b892_4c7f_881b_54bc34133711"
+  warpstream_virtual_cluster_id           = var.warpstream_virtual_cluster_id
   warpstream_agent_key_secret_manager_arn = aws_secretsmanager_secret_version.warpstream_agent_key.arn
 
-  # We recommend network optimized instances with a minimum of 4 vCPUs to get the best performance.
+  # We recommend network optimized instances with a minimum of 4 vCPUs and 16gb Memory to get the best performance.
   # We have also tested with Graviton3+ and found decent performance. 
+  # The ECS tasks assume 1:4 vCPU to Memory ratio with 1 core and 4gb of ram left to the host OS.
   ec2_instance_type = "m6in.xlarge"
 
   # Add the default VPC security group to the ECS EC2 instances.
   ec2_instance_security_group_ids = [module.vpc.default_security_group_id]
 
-  # List of subnet IDs to launch ESC ec2 VMs in. 
-  # Subnets automatically determine which availability zones the group will reside.
+  # List of subnet IDs to launch ecs ec2 VMs in. 
+  # Subnets automatically determine which availability zones the ec2 group will reside.
   ec2_vpc_zone_identifier = module.vpc.private_subnets
 
-  # The VPC and subnet IDs that the warpstream ECS service runs on
-  # The subnets can be different then the ec2_vpc_zone_identifier
+  # The VPC that the warpstream ECS service runs on
   ecs_service_vpc_id = module.vpc.vpc_id
-  ecs_subnet_ids     = module.vpc.private_subnets
+
+  # List of subnet IDs to launch the ecs service in. 
+  # The subnets can be different then the ec2_vpc_zone_identifier
+  # Subnets automatically determine which availability zones the ecs service will reside.
+  ecs_subnet_ids = module.vpc.private_subnets
 
   # Specifying the security group to allow things in the VPC to connect to WarpStream agents.
   ecs_service_additional_security_group_ids = [aws_security_group.warpstream-connect.id]

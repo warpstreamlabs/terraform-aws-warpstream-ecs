@@ -19,8 +19,20 @@ resource "aws_ecs_capacity_provider" "ecs" {
       maximum_scaling_step_size = 1000
       minimum_scaling_step_size = 1
       status                    = "ENABLED"
-      target_capacity           = var.ecs_service_max_capacity
+      target_capacity           = 100
     }
+  }
+}
+
+resource "aws_ecs_cluster_capacity_providers" "ecs" {
+  cluster_name = aws_ecs_cluster.ecs.name
+
+  capacity_providers = [aws_ecs_capacity_provider.ecs.name]
+
+  default_capacity_provider_strategy {
+    base              = 1
+    weight            = 100
+    capacity_provider = aws_ecs_capacity_provider.ecs.name
   }
 }
 
@@ -122,7 +134,7 @@ resource "aws_iam_role_policy" "ec2_ecs_task_s3_bucket" {
 locals {
   ecs_cores  = (data.aws_ec2_instance_type.ec2.default_vcpus - 1)
   ecs_cpu    = local.ecs_cores * 1024
-  ecs_memory = (data.aws_ec2_instance_type.ec2.memory_size - 2048)
+  ecs_memory = (data.aws_ec2_instance_type.ec2.memory_size - 4096)
 }
 
 resource "aws_ecs_task_definition" "service" {
@@ -192,7 +204,17 @@ resource "aws_ecs_task_definition" "service" {
       secrets : [{
         name : "WARPSTREAM_AGENT_KEY",
         valueFrom : var.warpstream_agent_key_secret_manager_arn
-      }]
+      }],
+      healthCheck : {
+        command : [
+          "CMD-SHELL",
+          "/usr/bin/nc -zv 127.0.0.1 8080"
+        ],
+        interval : 5,
+        timeout : 5,
+        retries : 3,
+        startPeriod : 30
+      },
     }
   ])
 }
@@ -239,11 +261,26 @@ resource "aws_ecs_service" "service" {
   task_definition = aws_ecs_task_definition.service.arn
 
   desired_count                      = length(var.ecs_subnet_ids) # Minimum of one service container per zone
-  deployment_minimum_healthy_percent = "66"
+  deployment_minimum_healthy_percent = "100"
   deployment_maximum_percent         = "200"
 
   lifecycle {
     ignore_changes = [desired_count]
+  }
+
+  capacity_provider_strategy {
+    base              = 1
+    capacity_provider = aws_ecs_capacity_provider.ecs.name
+    weight            = 100
+  }
+
+  deployment_circuit_breaker {
+    enable   = false
+    rollback = false
+  }
+
+  deployment_controller {
+    type = "ECS"
   }
 
   network_configuration {
