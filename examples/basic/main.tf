@@ -74,6 +74,14 @@ module "endpoints" {
       route_table_ids = module.vpc.private_route_table_ids
       tags            = { Name = local.name }
     },
+    # Used for S3 Express for lower latency configurations
+    # Ref: https://docs.warpstream.com/warpstream/byoc/advanced-agent-deployment-options/low-latency-clusters
+    s3express = {
+      service         = "s3express"
+      service_type    = "Gateway"
+      route_table_ids = module.vpc.private_route_table_ids
+      tags            = { Name = local.name }
+    }
   }
 }
 
