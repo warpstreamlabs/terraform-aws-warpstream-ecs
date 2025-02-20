@@ -5,7 +5,7 @@ variable "cluster_name" {
 variable "warpstream_agent_version" {
   description = "The version of the warpstream agent to deploy"
   type        = string
-  default     = "v625"
+  default     = "v628"
 }
 
 variable "warpstream_virtual_cluster_id" {
