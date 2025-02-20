@@ -208,7 +208,7 @@ locals {
   ecs_cpu    = local.ecs_cores * 1024
   ecs_memory = (data.aws_ec2_instance_type.ec2.memory_size - 4096)
 
-  buckets_to_urls = [for bucket_name in var.bucket_names : "s3://${bucket_name}?region=${var.aws_region}"]
+  buckets_to_urls = [for bucket_name in var.bucket_names : "s3://${bucket_name}?region=${data.aws_region.current.name}"]
   bucket_url      = length(var.bucket_names) == 1 ? local.buckets_to_urls[0] : "warpstream_multi://${join("<>", local.buckets_to_urls)}"
 }
 
@@ -287,7 +287,7 @@ resource "aws_ecs_task_definition" "service" {
           },
           {
             name : "WARPSTREAM_COMPACTION_BUCKET_URL",
-            value : "s3://${var.compaction_bucket_name}?region=${var.aws_region}"
+            value : "s3://${var.compaction_bucket_name}?region=${data.aws_region.current.name}"
           },
           {
             name : "WARPSTREAM_BATCH_TIMEOUT",

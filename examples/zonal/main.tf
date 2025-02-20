@@ -125,9 +125,6 @@ module "warpstream-a" {
   cluster_name         = "${local.name}-a"
   control_plane_region = local.region
 
-  // Same as control plane region in this example, however they can be different.
-  aws_region = local.region
-
   warpstream_virtual_cluster_id           = var.warpstream_virtual_cluster_id
   warpstream_agent_key_secret_manager_arn = aws_secretsmanager_secret_version.warpstream_agent_key.arn
 
@@ -167,9 +164,6 @@ module "warpstream-b" {
   cluster_name         = "${local.name}-b"
   control_plane_region = local.region
 
-  // Same as control plane region in this example, however they can be different.
-  aws_region = local.region
-
   warpstream_virtual_cluster_id           = var.warpstream_virtual_cluster_id
   warpstream_agent_key_secret_manager_arn = aws_secretsmanager_secret_version.warpstream_agent_key.arn
 
@@ -208,9 +202,6 @@ module "warpstream-c" {
 
   cluster_name         = "${local.name}-c"
   control_plane_region = local.region
-
-  // Same as control plane region in this example, however they can be different.
-  aws_region = local.region
 
   warpstream_virtual_cluster_id           = var.warpstream_virtual_cluster_id
   warpstream_agent_key_secret_manager_arn = aws_secretsmanager_secret_version.warpstream_agent_key.arn

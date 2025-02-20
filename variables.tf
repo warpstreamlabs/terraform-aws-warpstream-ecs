@@ -49,10 +49,6 @@ variable "control_plane_region" {
   description = "The region of the warpstream control plane"
 }
 
-variable "aws_region" {
-  description = "The AWS region of the warpstream deployment"
-}
-
 variable "ec2_instance_type" {
   description = "The instance type for ec2 ecs instances"
 }
