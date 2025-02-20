@@ -117,12 +117,12 @@ resource "aws_secretsmanager_secret_version" "warpstream_agent_key" {
   secret_string = var.warpstream_agent_key
 }
 
-module "warpstream" {
+module "warpstream-a" {
   source = "../.."
 
   depends_on = [module.vpc, module.endpoints]
 
-  cluster_name         = local.name
+  cluster_name         = "${local.name}-a"
   control_plane_region = local.region
 
   // Same as control plane region in this example, however they can be different.
@@ -141,7 +141,8 @@ module "warpstream" {
 
   # List of subnet IDs to launch ecs ec2 VMs in. 
   # Subnets automatically determine which availability zones the ec2 group will reside.
-  ec2_vpc_zone_identifier = module.vpc.private_subnets
+  # Only using a single subnet from our VPC to limit which zone we deploy into.
+  ec2_vpc_zone_identifier = [module.vpc.private_subnets[0]]
 
   # The VPC that the warpstream ECS service runs on
   ecs_service_vpc_id = module.vpc.vpc_id
@@ -149,7 +150,92 @@ module "warpstream" {
   # List of subnet IDs to launch the ecs service in. 
   # The subnets can be different then the ec2_vpc_zone_identifier
   # Subnets automatically determine which availability zones the ecs service will reside.
-  ecs_subnet_ids = module.vpc.private_subnets
+  # Only using a single subnet from our VPC to limit which zone we deploy into.
+  ecs_subnet_ids = [module.vpc.private_subnets[0]]
+
+  # Specifying the security group to allow things in the VPC to connect to WarpStream agents.
+  ecs_service_additional_security_group_ids = [aws_security_group.warpstream-connect.id]
+
+  bucket_names = [aws_s3_bucket.bucket.bucket]
+}
+
+module "warpstream-b" {
+  source = "../.."
+
+  depends_on = [module.vpc, module.endpoints]
+
+  cluster_name         = "${local.name}-b"
+  control_plane_region = local.region
+
+  // Same as control plane region in this example, however they can be different.
+  aws_region = local.region
+
+  warpstream_virtual_cluster_id           = var.warpstream_virtual_cluster_id
+  warpstream_agent_key_secret_manager_arn = aws_secretsmanager_secret_version.warpstream_agent_key.arn
+
+  # We recommend network optimized instances with a minimum of 4 vCPUs and 16gb Memory to get the best performance.
+  # We have also tested with Graviton3+ and found decent performance. 
+  # The ECS tasks assume 1:4 vCPU to Memory ratio with 1 core and 4gb of ram left to the host OS.
+  ec2_instance_type = "m6in.xlarge"
+
+  # Add the default VPC security group to the ECS EC2 instances.
+  ec2_instance_security_group_ids = [module.vpc.default_security_group_id]
+
+  # List of subnet IDs to launch ecs ec2 VMs in. 
+  # Subnets automatically determine which availability zones the ec2 group will reside.
+  # Only using a single subnet from our VPC to limit which zone we deploy into.
+  ec2_vpc_zone_identifier = [module.vpc.private_subnets[1]]
+
+  # The VPC that the warpstream ECS service runs on
+  ecs_service_vpc_id = module.vpc.vpc_id
+
+  # List of subnet IDs to launch the ecs service in. 
+  # The subnets can be different then the ec2_vpc_zone_identifier
+  # Subnets automatically determine which availability zones the ecs service will reside.
+  # Only using a single subnet from our VPC to limit which zone we deploy into.
+  ecs_subnet_ids = [module.vpc.private_subnets[1]]
+
+  # Specifying the security group to allow things in the VPC to connect to WarpStream agents.
+  ecs_service_additional_security_group_ids = [aws_security_group.warpstream-connect.id]
+
+  bucket_names = [aws_s3_bucket.bucket.bucket]
+}
+
+module "warpstream-c" {
+  source = "../.."
+
+  depends_on = [module.vpc, module.endpoints]
+
+  cluster_name         = "${local.name}-c"
+  control_plane_region = local.region
+
+  // Same as control plane region in this example, however they can be different.
+  aws_region = local.region
+
+  warpstream_virtual_cluster_id           = var.warpstream_virtual_cluster_id
+  warpstream_agent_key_secret_manager_arn = aws_secretsmanager_secret_version.warpstream_agent_key.arn
+
+  # We recommend network optimized instances with a minimum of 4 vCPUs and 16gb Memory to get the best performance.
+  # We have also tested with Graviton3+ and found decent performance. 
+  # The ECS tasks assume 1:4 vCPU to Memory ratio with 1 core and 4gb of ram left to the host OS.
+  ec2_instance_type = "m6in.xlarge"
+
+  # Add the default VPC security group to the ECS EC2 instances.
+  ec2_instance_security_group_ids = [module.vpc.default_security_group_id]
+
+  # List of subnet IDs to launch ecs ec2 VMs in. 
+  # Subnets automatically determine which availability zones the ec2 group will reside.
+  # Only using a single subnet from our VPC to limit which zone we deploy into.
+  ec2_vpc_zone_identifier = [module.vpc.private_subnets[2]]
+
+  # The VPC that the warpstream ECS service runs on
+  ecs_service_vpc_id = module.vpc.vpc_id
+
+  # List of subnet IDs to launch the ecs service in. 
+  # The subnets can be different then the ec2_vpc_zone_identifier
+  # Subnets automatically determine which availability zones the ecs service will reside.
+  # Only using a single subnet from our VPC to limit which zone we deploy into.
+  ecs_subnet_ids = [module.vpc.private_subnets[2]]
 
   # Specifying the security group to allow things in the VPC to connect to WarpStream agents.
   ecs_service_additional_security_group_ids = [aws_security_group.warpstream-connect.id]
