@@ -107,6 +107,42 @@ resource "aws_iam_role" "ecs_task" {
 }
 
 data "aws_iam_policy_document" "ec2_ecs_task_s3_bucket" {
+  count = length(var.bucket_names) == 1 ? 1 : 0
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "s3:ListBucket",
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject",
+    ]
+
+    resources = concat([
+      for bucketName in var.bucket_names :
+      "arn:aws:s3:::${bucketName}"
+      ], [
+      for bucketName in var.bucket_names :
+      "arn:aws:s3:::${bucketName}/*"
+      ]
+    )
+  }
+}
+
+
+resource "aws_iam_role_policy" "ec2_ecs_task_s3_bucket" {
+  count = length(var.bucket_names) == 1 ? 1 : 0
+
+  name = "${var.cluster_name}-ecs-task-s3"
+  role = aws_iam_role.ecs_task.id
+
+  policy = data.aws_iam_policy_document.ec2_ecs_task_s3_bucket[0].json
+}
+
+data "aws_iam_policy_document" "ec2_ecs_task_s3_compaction_bucket" {
+  count = length(var.compaction_bucket_name) > 0 ? 1 : 0
+
   statement {
     effect = "Allow"
 
@@ -118,23 +154,62 @@ data "aws_iam_policy_document" "ec2_ecs_task_s3_bucket" {
     ]
 
     resources = [
-      "arn:aws:s3:::${aws_s3_bucket.bucket.bucket}",
-      "arn:aws:s3:::${aws_s3_bucket.bucket.bucket}/*"
+      "arn:aws:s3:::${var.compaction_bucket_name}",
+      "arn:aws:s3:::${var.compaction_bucket_name}/*"
     ]
   }
 }
 
-resource "aws_iam_role_policy" "ec2_ecs_task_s3_bucket" {
-  name = "${var.cluster_name}-ecs-task-s3"
+resource "aws_iam_role_policy" "ec2_ecs_task_s3_compaction_bucket" {
+  count = length(var.compaction_bucket_name) > 0 ? 1 : 0
+
+  name = "${var.cluster_name}-ecs-task-s3-compaction"
   role = aws_iam_role.ecs_task.id
 
-  policy = data.aws_iam_policy_document.ec2_ecs_task_s3_bucket.json
+  policy = data.aws_iam_policy_document.ec2_ecs_task_s3_compaction_bucket[0].json
+}
+
+data "aws_iam_policy_document" "ec2_ecs_task_s3express_bucket" {
+  count = length(var.bucket_names) > 1 ? 1 : 0
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "s3:ListBucket",
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3express:CreateSession"
+    ]
+
+    resources = concat([
+      for bucketName in var.bucket_names :
+      "arn:aws:s3express:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:bucket/${bucketName}"
+      ], [
+      for bucketName in var.bucket_names :
+      "arn:aws:s3express:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:bucket/${bucketName}/*"
+      ]
+    )
+  }
+}
+
+resource "aws_iam_role_policy" "ec2_ecs_task_s3express_compaction_bucket" {
+  count = length(var.bucket_names) > 1 ? 1 : 0
+
+  name = "${var.cluster_name}-ecs-task-s3express"
+  role = aws_iam_role.ecs_task.id
+
+  policy = data.aws_iam_policy_document.ec2_ecs_task_s3express_bucket[0].json
 }
 
 locals {
   ecs_cores  = (data.aws_ec2_instance_type.ec2.default_vcpus - 1)
   ecs_cpu    = local.ecs_cores * 1024
   ecs_memory = (data.aws_ec2_instance_type.ec2.memory_size - 4096)
+
+  buckets_to_urls = [for bucket_name in var.bucket_names : "s3://${bucket_name}?region=${var.aws_region}"]
+  bucket_url      = length(var.bucket_names) == 1 ? local.buckets_to_urls[0] : "warpstream_multi://${join("<>", local.buckets_to_urls)}"
 }
 
 resource "aws_ecs_task_definition" "service" {
@@ -179,28 +254,47 @@ resource "aws_ecs_task_definition" "service" {
       command : [
         "agent"
       ],
-      environment : [
-        {
-          name : "AWS_REGION",
-          value : data.aws_region.current.name
-        },
-        {
-          name : "GOMAXPROCS",
-          value : tostring(local.ecs_cores)
-        },
-        {
-          name : "WARPSTREAM_BUCKET_URL",
-          value : "s3://${aws_s3_bucket.bucket.bucket}"
-        },
-        {
-          name : "WARPSTREAM_DEFAULT_VIRTUAL_CLUSTER_ID",
-          value : var.warpstream_virtual_cluster_id
-        },
-        {
-          name : "WARPSTREAM_REGION",
-          value : var.control_plane_region
-        },
-      ],
+      environment : concat(
+        [
+          {
+            name : "AWS_REGION",
+            value : data.aws_region.current.name
+          },
+          {
+            name : "GOMAXPROCS",
+            value : tostring(local.ecs_cores)
+          },
+
+          {
+            name : "WARPSTREAM_DEFAULT_VIRTUAL_CLUSTER_ID",
+            value : var.warpstream_virtual_cluster_id
+          },
+          {
+            name : "WARPSTREAM_REGION",
+            value : var.control_plane_region
+          },
+        ],
+        length(var.bucket_names) == 1 ?
+        [
+          {
+            name : "WARPSTREAM_BUCKET_URL",
+            value : local.bucket_url
+          },
+          ] : [
+          {
+            name : "WARPSTREAM_INGESTION_BUCKET_URL",
+            value : local.bucket_url
+          },
+          {
+            name : "WARPSTREAM_COMPACTION_BUCKET_URL",
+            value : "s3://${var.compaction_bucket_name}?region=${var.aws_region}"
+          },
+          {
+            name : "WARPSTREAM_BATCH_TIMEOUT",
+            value : "50ms"
+          }
+        ]
+      ),
       secrets : [{
         name : "WARPSTREAM_AGENT_KEY",
         valueFrom : var.warpstream_agent_key_secret_manager_arn
@@ -295,8 +389,12 @@ resource "aws_ecs_service" "service" {
 }
 
 resource "aws_appautoscaling_target" "dev_to_target" {
-  max_capacity       = var.ecs_service_max_capacity
-  min_capacity       = length(var.ecs_subnet_ids) # Minimum of one service container per zone
+  max_capacity = var.ecs_service_max_capacity
+
+  # Minimum of one service container per zone or ecs_service_min_capacity
+  # whichever is larger
+  min_capacity = max(length(var.ecs_subnet_ids), var.ecs_service_min_capacity)
+
   resource_id        = "service/${aws_ecs_cluster.ecs.name}/${aws_ecs_service.service.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
