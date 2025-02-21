@@ -1,5 +1,6 @@
+# Creating the bucket, access controls and lifecycle
 resource "aws_s3_bucket" "bucket" {
-  bucket_prefix = "${var.cluster_name}-"
+  bucket_prefix = "${local.name}-"
 }
 
 resource "aws_s3_bucket_public_access_block" "bucket" {

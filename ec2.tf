@@ -12,7 +12,7 @@ data "aws_iam_policy_document" "ec2_ecs" {
 }
 
 resource "aws_iam_role" "ec2_ecs" {
-  name               = "${var.cluster_name}-ecs"
+  name               = "${var.resource_prefix}-ecs"
   assume_role_policy = data.aws_iam_policy_document.ec2_ecs.json
 }
 
@@ -27,7 +27,7 @@ resource "aws_iam_role_policy_attachment" "ec2_ecs_cloudwatchlogs_full_access" {
 }
 
 resource "aws_iam_instance_profile" "ec2_ecs" {
-  name = "${var.cluster_name}-ecs"
+  name = "${var.resource_prefix}-ecs"
   role = aws_iam_role.ec2_ecs.name
 }
 
@@ -41,7 +41,7 @@ data "aws_ssm_parameter" "ecs_optimized_ami" {
 }
 
 resource "aws_launch_template" "ec2_ecs" {
-  name = "${var.cluster_name}-ecs"
+  name = "${var.resource_prefix}-ecs"
 
   image_id      = jsondecode(data.aws_ssm_parameter.ecs_optimized_ami.value)["image_id"]
   instance_type = data.aws_ec2_instance_type.ec2.instance_type
@@ -62,7 +62,7 @@ EOT
 }
 
 resource "aws_autoscaling_group" "ec2_ecs" {
-  name = "${var.cluster_name}-ecs"
+  name = "${var.resource_prefix}-ecs"
 
   health_check_grace_period = 30
   health_check_type         = "EC2"

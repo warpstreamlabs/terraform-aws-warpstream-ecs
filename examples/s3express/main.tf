@@ -147,5 +147,6 @@ module "warpstream" {
   # Specifying the security group to allow things in the VPC to connect to WarpStream agents.
   ecs_service_additional_security_group_ids = [aws_security_group.warpstream-connect.id]
 
-  bucket_names = [aws_s3_bucket.bucket.bucket]
+  bucket_names           = aws_s3_directory_bucket.s3_express_buckets[*].bucket
+  compaction_bucket_name = aws_s3_bucket.compaction_bucket.bucket
 }

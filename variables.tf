@@ -1,11 +1,11 @@
-variable "cluster_name" {
-  description = "The warpstream cluster name"
+variable "resource_prefix" {
+  description = "The prefix to apply to AWS resource names"
 }
 
 variable "warpstream_agent_version" {
   description = "The version of the warpstream agent to deploy"
   type        = string
-  default     = "v625"
+  default     = "v628"
 }
 
 variable "warpstream_virtual_cluster_id" {
@@ -16,6 +16,28 @@ variable "warpstream_virtual_cluster_id" {
 variable "warpstream_agent_key_secret_manager_arn" {
   description = "The ARN of the secret manager secret version for the warpstream agent key"
   type        = string
+}
+
+variable "bucket_names" {
+  description = "A list of S3 bucket names that the WarpStream agents will use"
+  type        = list(string)
+
+  validation {
+    condition     = length(var.bucket_names) != 0
+    error_message = "Must set at least one bucket name in 'bucket_names'"
+  }
+
+}
+
+variable "compaction_bucket_name" {
+  description = "The name of the compaction bucket for low latency clusters"
+  type        = string
+  default     = ""
+}
+
+variable "ecs_service_min_capacity" {
+  description = "The minimum number of warpstream agent replicas to autoscale down to"
+  default     = 3
 }
 
 variable "ecs_service_max_capacity" {
