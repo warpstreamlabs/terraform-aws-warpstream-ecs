@@ -1,5 +1,5 @@
-variable "cluster_name" {
-  description = "The warpstream cluster name"
+variable "resource_prefix" {
+  description = "The prefix to apply to AWS resource names"
 }
 
 variable "warpstream_agent_version" {

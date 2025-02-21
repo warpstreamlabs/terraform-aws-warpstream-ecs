@@ -1,6 +1,6 @@
 
 resource "aws_ecs_cluster" "ecs" {
-  name = var.cluster_name
+  name = var.resource_prefix
 
   setting {
     name  = "containerInsights"
@@ -9,7 +9,7 @@ resource "aws_ecs_cluster" "ecs" {
 }
 
 resource "aws_ecs_capacity_provider" "ecs" {
-  name = var.cluster_name
+  name = var.resource_prefix
 
   auto_scaling_group_provider {
     auto_scaling_group_arn         = aws_autoscaling_group.ec2_ecs.arn
@@ -50,7 +50,7 @@ data "aws_iam_policy_document" "ecs_task_execution" {
 }
 
 resource "aws_iam_role" "ecs_task_execution" {
-  name               = "${var.cluster_name}-ecs-task-execution"
+  name               = "${var.resource_prefix}-ecs-task-execution"
   assume_role_policy = data.aws_iam_policy_document.ecs_task_execution.json
 }
 
@@ -68,7 +68,7 @@ data "aws_iam_policy_document" "ecs_task_execution_agent_key_sm" {
 }
 
 resource "aws_iam_role_policy" "ecs_task_execution_agent_key_sm" {
-  name = "${var.cluster_name}-ecs-task-execution-agent-key-sm"
+  name = "${var.resource_prefix}-ecs-task-execution-agent-key-sm"
   role = aws_iam_role.ecs_task_execution.id
 
   policy = data.aws_iam_policy_document.ecs_task_execution_agent_key_sm.json
@@ -102,7 +102,7 @@ data "aws_iam_policy_document" "ecs_task" {
 }
 
 resource "aws_iam_role" "ecs_task" {
-  name               = "${var.cluster_name}-ecs-task"
+  name               = "${var.resource_prefix}-ecs-task"
   assume_role_policy = data.aws_iam_policy_document.ecs_task.json
 }
 
@@ -134,7 +134,7 @@ data "aws_iam_policy_document" "ec2_ecs_task_s3_bucket" {
 resource "aws_iam_role_policy" "ec2_ecs_task_s3_bucket" {
   count = length(var.bucket_names) == 1 ? 1 : 0
 
-  name = "${var.cluster_name}-ecs-task-s3"
+  name = "${var.resource_prefix}-ecs-task-s3"
   role = aws_iam_role.ecs_task.id
 
   policy = data.aws_iam_policy_document.ec2_ecs_task_s3_bucket[0].json
@@ -163,7 +163,7 @@ data "aws_iam_policy_document" "ec2_ecs_task_s3_compaction_bucket" {
 resource "aws_iam_role_policy" "ec2_ecs_task_s3_compaction_bucket" {
   count = length(var.compaction_bucket_name) > 0 ? 1 : 0
 
-  name = "${var.cluster_name}-ecs-task-s3-compaction"
+  name = "${var.resource_prefix}-ecs-task-s3-compaction"
   role = aws_iam_role.ecs_task.id
 
   policy = data.aws_iam_policy_document.ec2_ecs_task_s3_compaction_bucket[0].json
@@ -194,10 +194,10 @@ data "aws_iam_policy_document" "ec2_ecs_task_s3express_bucket" {
   }
 }
 
-resource "aws_iam_role_policy" "ec2_ecs_task_s3express_compaction_bucket" {
+resource "aws_iam_role_policy" "ec2_ecs_task_s3express_bucket" {
   count = length(var.bucket_names) > 1 ? 1 : 0
 
-  name = "${var.cluster_name}-ecs-task-s3express"
+  name = "${var.resource_prefix}-ecs-task-s3express"
   role = aws_iam_role.ecs_task.id
 
   policy = data.aws_iam_policy_document.ec2_ecs_task_s3express_bucket[0].json
@@ -213,7 +213,7 @@ locals {
 }
 
 resource "aws_ecs_task_definition" "service" {
-  family = var.cluster_name
+  family = var.resource_prefix
 
   network_mode = "awsvpc"
 
@@ -314,7 +314,7 @@ resource "aws_ecs_task_definition" "service" {
 }
 
 resource "aws_security_group" "ecs_service" {
-  name        = "${var.cluster_name}-agents"
+  name        = "${var.resource_prefix}-agents"
   description = "Allow Warpstream Agent Communication"
   vpc_id      = var.ecs_service_vpc_id
 }
@@ -350,7 +350,7 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
 
 
 resource "aws_ecs_service" "service" {
-  name            = var.cluster_name
+  name            = var.resource_prefix
   cluster         = aws_ecs_cluster.ecs.id
   task_definition = aws_ecs_task_definition.service.arn
 
@@ -401,7 +401,7 @@ resource "aws_appautoscaling_target" "dev_to_target" {
 }
 
 resource "aws_appautoscaling_policy" "dev_to_cpu" {
-  name               = var.cluster_name
+  name               = var.resource_prefix
   policy_type        = "TargetTrackingScaling"
   resource_id        = aws_appautoscaling_target.dev_to_target.resource_id
   scalable_dimension = aws_appautoscaling_target.dev_to_target.scalable_dimension

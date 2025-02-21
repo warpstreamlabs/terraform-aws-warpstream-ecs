@@ -104,12 +104,8 @@ resource "aws_vpc_security_group_ingress_rule" "allow_agent_to_agent_http" {
 }
 
 # Store the WarpStream Agent Key in AWS Secret Manager
-resource "random_id" "warpstream_agent_key" {
-  byte_length = 4
-}
-
 resource "aws_secretsmanager_secret" "warpstream_agent_key" {
-  name = "${local.name}-agent-key-${random_id.warpstream_agent_key.hex}"
+  name_prefix = "${local.name}-agent-key"
 }
 
 resource "aws_secretsmanager_secret_version" "warpstream_agent_key" {
@@ -122,14 +118,14 @@ module "warpstream" {
 
   depends_on = [module.vpc, module.endpoints]
 
-  cluster_name         = local.name
+  resource_prefix      = local.name
   control_plane_region = local.region
 
   warpstream_virtual_cluster_id           = var.warpstream_virtual_cluster_id
   warpstream_agent_key_secret_manager_arn = aws_secretsmanager_secret_version.warpstream_agent_key.arn
 
   # We recommend network optimized instances with a minimum of 4 vCPUs and 16gb Memory to get the best performance.
-  # We have also tested with Graviton3+ and found decent performance. 
+  # We have also tested with Graviton3+ (m7g) and found decent performance. 
   # The ECS tasks assume 1:4 vCPU to Memory ratio with 1 core and 4gb of ram left to the host OS.
   ec2_instance_type = "m6in.xlarge"
 
