@@ -149,4 +149,11 @@ module "warpstream" {
 
   bucket_names           = aws_s3_directory_bucket.s3_express_buckets[*].bucket
   compaction_bucket_name = aws_s3_bucket.compaction_bucket.bucket
+
+  # You can lower latency even more by setting the WARPSTREAM_BATCH_TIMEOUT environment variable
+  # Ref: https://docs.warpstream.com/warpstream/byoc/advanced-agent-deployment-options/low-latency-clusters#batch-timeout
+  # ecs_service_additional_environment_variables = [{
+  #   name  = "WARPSTREAM_BATCH_TIMEOUT"
+  #   value = "50ms"
+  # }]
 }

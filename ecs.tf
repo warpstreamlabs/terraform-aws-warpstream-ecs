@@ -289,11 +289,7 @@ resource "aws_ecs_task_definition" "service" {
             name : "WARPSTREAM_COMPACTION_BUCKET_URL",
             value : "s3://${var.compaction_bucket_name}?region=${data.aws_region.current.name}"
           },
-          {
-            name : "WARPSTREAM_BATCH_TIMEOUT",
-            value : "50ms"
-          }
-        ]
+        ], var.ecs_service_additional_environment_variables
       ),
       secrets : [{
         name : "WARPSTREAM_AGENT_KEY",
