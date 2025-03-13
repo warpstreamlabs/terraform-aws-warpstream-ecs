@@ -82,3 +82,12 @@ variable "ecs_service_additional_security_group_ids" {
   description = "Security group IDs for ecs service"
   type        = list(string)
 }
+
+variable "ecs_service_additional_environment_variables" {
+  description = "Additional environment variables to expose on the WarpStream ECS service"
+  type = list(object({
+    name  = string
+    value = string
+  }))
+  default = []
+}
