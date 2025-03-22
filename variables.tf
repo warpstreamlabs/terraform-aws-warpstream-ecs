@@ -5,7 +5,7 @@ variable "resource_prefix" {
 variable "warpstream_agent_version" {
   description = "The version of the warpstream agent to deploy"
   type        = string
-  default     = "v637"
+  default     = "v638"
 }
 
 variable "warpstream_virtual_cluster_id" {
