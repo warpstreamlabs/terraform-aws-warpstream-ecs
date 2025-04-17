@@ -50,6 +50,7 @@ resource "aws_launch_template" "ec2_ecs" {
 #!/bin/bash
 
 echo ECS_CLUSTER=${aws_ecs_cluster.ecs.name} >> /etc/ecs/ecs.config
+echo ECS_CONTAINER_STOP_TIMEOUT=5m >> /etc/ecs/ecs.config
 
 EOT
   )
