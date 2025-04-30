@@ -226,7 +226,7 @@ resource "aws_ecs_task_definition" "service" {
   container_definitions = jsonencode([
     {
       name : "warpstream-agent",
-      image : "public.ecr.aws/warpstream-labs/warpstream_agent:${var.warpstream_agent_version}",
+      image : "${var.warpstream_agent_docker_image}:${var.warpstream_agent_version}",
       logConfiguration : {
         logDriver : "awslogs",
         options : {
@@ -245,8 +245,8 @@ resource "aws_ecs_task_definition" "service" {
           protocol : "tcp"
         },
         {
-          containerPort : 9092,
-          hostPort : 9092,
+          containerPort : var.kafka_port,
+          hostPort : var.kafka_port,
           protocol : "tcp"
         }
       ],
@@ -273,6 +273,10 @@ resource "aws_ecs_task_definition" "service" {
             name : "WARPSTREAM_REGION",
             value : var.control_plane_region
           },
+          {
+            name : "WARPSTREAM_KAFKA_PORT"
+            value : "${var.kafka_port}"
+          }
         ],
         length(var.bucket_names) == 1 ?
         [
@@ -330,8 +334,8 @@ resource "aws_vpc_security_group_ingress_rule" "allow_agent_to_agent_kafka" {
   description       = "Allow Agent to Agent Kafka Communication"
 
   ip_protocol                  = "tcp"
-  from_port                    = 9092
-  to_port                      = 9092
+  from_port                    = var.kafka_port
+  to_port                      = var.kafka_port
   referenced_security_group_id = aws_security_group.ecs_service.id
 }
 
