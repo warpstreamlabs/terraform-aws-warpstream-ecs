@@ -275,7 +275,7 @@ resource "aws_ecs_task_definition" "service" {
           },
           {
             name : "WARPSTREAM_KAFKA_PORT"
-            value : "${var.kafka_port}"
+            value : tostring(var.kafka_port)
           }
         ],
         length(var.bucket_names) == 1 ?
