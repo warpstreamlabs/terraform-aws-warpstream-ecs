@@ -89,7 +89,7 @@ module "endpoints" {
 # to connect to the WarpStream Agents.
 resource "aws_security_group" "warpstream-connect" {
   name        = "${local.name}-connect"
-  description = "Allow applications in the the VPC to connect to the WarpStream Kafka Port"
+  description = "Allow applications in the VPC to connect to the WarpStream Kafka Port"
   vpc_id      = module.vpc.vpc_id
 }
 
