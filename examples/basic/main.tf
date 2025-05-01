@@ -89,13 +89,13 @@ module "endpoints" {
 # to connect to the WarpStream Agents.
 resource "aws_security_group" "warpstream-connect" {
   name        = "${local.name}-connect"
-  description = "Allow things the VPC to connect to the WarpStream Kafka Port"
+  description = "Allow applications in the VPC to connect to the WarpStream Kafka Port"
   vpc_id      = module.vpc.vpc_id
 }
 
-resource "aws_vpc_security_group_ingress_rule" "allow_agent_to_agent_http" {
+resource "aws_vpc_security_group_ingress_rule" "allow_application_to_agent_kafka" {
   security_group_id = aws_security_group.warpstream-connect.id
-  description       = "Allow Server to Agent Kafka Communication"
+  description       = "Allow applications to Agent Kafka Communication"
 
   ip_protocol = "tcp"
   from_port   = 9092

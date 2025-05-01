@@ -2,6 +2,18 @@ variable "resource_prefix" {
   description = "The prefix to apply to AWS resource names"
 }
 
+variable "warpstream_agent_docker_image" {
+  description = "The docker image for the warpstream agent"
+  type        = string
+  default     = "public.ecr.aws/warpstream-labs/warpstream_agent"
+}
+
+variable "kafka_port" {
+  description = "The port that warpstream listens on for Kafka connections"
+  type        = number
+  default     = 9092
+}
+
 variable "warpstream_agent_version" {
   description = "The version of the warpstream agent to deploy"
   type        = string
