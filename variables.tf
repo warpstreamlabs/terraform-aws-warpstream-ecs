@@ -103,3 +103,12 @@ variable "ecs_service_additional_environment_variables" {
   }))
   default = []
 }
+
+variable "ecs_service_additional_iam_policies" {
+  description = "Additional IAM policies to assign to the task ECS role"
+  type = list(object({
+    name        = string
+    policy_json = string
+  }))
+  default = []
+}

@@ -106,6 +106,17 @@ resource "aws_iam_role" "ecs_task" {
   assume_role_policy = data.aws_iam_policy_document.ecs_task.json
 }
 
+resource "aws_iam_role_policy" "ec2_ecs_task_additional" {
+  for_each = {
+    for index, policy in var.ecs_service_additional_iam_policies :
+    policy.name => policy
+  }
+  name = "${var.resource_prefix}-ecs-task-additional-${each.value.name}"
+  role = aws_iam_role.ecs_task.id
+
+  policy = each.value.policy_json
+}
+
 data "aws_iam_policy_document" "ec2_ecs_task_s3_bucket" {
   count = length(var.bucket_names) == 1 ? 1 : 0
 
