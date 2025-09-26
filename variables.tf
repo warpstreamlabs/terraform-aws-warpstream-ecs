@@ -112,3 +112,9 @@ variable "ecs_service_additional_iam_policies" {
   }))
   default = []
 }
+
+variable "ecs_log_group_retention_days" {
+  description = "The number of days to retain warpstream logs in the log group"
+  type        = number
+  default     = 7
+}

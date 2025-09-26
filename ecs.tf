@@ -223,6 +223,11 @@ locals {
   bucket_url      = length(var.bucket_names) == 1 ? local.buckets_to_urls[0] : "warpstream_multi://${join("<>", local.buckets_to_urls)}"
 }
 
+resource "aws_cloudwatch_log_group" "warpstream_agent" {
+  name              = "/warpstream/ecs/${var.resource_prefix}/service/${var.resource_prefix}"
+  retention_in_days = var.ecs_log_group_retention_days
+}
+
 resource "aws_ecs_task_definition" "service" {
   family = var.resource_prefix
 
@@ -241,8 +246,7 @@ resource "aws_ecs_task_definition" "service" {
       logConfiguration : {
         logDriver : "awslogs",
         options : {
-          awslogs-create-group : "true",
-          awslogs-group : "warpstream-agent",
+          awslogs-group : aws_cloudwatch_log_group.warpstream_agent.name,
           awslogs-region : data.aws_region.current.name,
           awslogs-stream-prefix : "warpstream-agent"
         }
