@@ -253,6 +253,13 @@ resource "aws_ecs_task_definition" "service" {
       },
       cpu : local.ecs_cpu,
       memory : local.ecs_memory,
+      ulimits : [
+        {
+          name : "nofile",
+          softLimit : 1048576,
+          hardLimit : 1048576
+        },
+      ]
       portMappings : [
         {
           containerPort : 8080,
