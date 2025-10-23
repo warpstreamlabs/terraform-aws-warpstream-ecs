@@ -253,6 +253,18 @@ resource "aws_ecs_task_definition" "service" {
       },
       cpu : local.ecs_cpu,
       memory : local.ecs_memory,
+      // Overriding the default nofile ulimit of 65535.
+      // With the default limits larger workloads may see the following error:
+      // "accept tcp [::]:9092: accept4: too many open files"
+      //   
+      // We are increasing the limit to 1048576 to be able to handle a large number of connections
+      ulimits : [
+        {
+          name : "nofile",
+          softLimit : 1048576,
+          hardLimit : 1048576
+        },
+      ]
       portMappings : [
         {
           containerPort : 8080,
