@@ -17,7 +17,7 @@ variable "kafka_port" {
 variable "warpstream_agent_version" {
   description = "The version of the warpstream agent to deploy"
   type        = string
-  default     = "v786"
+  default     = "v787"
 }
 
 variable "warpstream_virtual_cluster_id" {
