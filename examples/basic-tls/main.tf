@@ -14,7 +14,7 @@ variable "warpstream_agent_key" {
   description = "The agent key for the warpstream cluster"
   type        = string
   sensitive   = true
-  default     = "aks_8767614f91aee4b7d9185f15e387b9f1c496bd58357e146ced0a453249d5fe2c"
+  default     = "YOUR_AGENT_KEY"
 }
 
 provider "aws" {
