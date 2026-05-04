@@ -7,14 +7,12 @@ locals {
 variable "warpstream_virtual_cluster_id" {
   description = "The warpstream virtual cluster id"
   type        = string
-  default     = "vci_d0821d64_e6c1_4322_b327_bbf3093b74e1"
 }
 
 variable "warpstream_agent_key" {
   description = "The agent key for the warpstream cluster"
   type        = string
   sensitive   = true
-  default     = "YOUR_AGENT_KEY"
 }
 
 provider "aws" {
