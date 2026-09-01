@@ -16,14 +16,9 @@ resource "aws_iam_role" "ec2_ecs" {
   assume_role_policy = data.aws_iam_policy_document.ec2_ecs.json
 }
 
-resource "aws_iam_role_policy_attachment" "ec2_ecs_ecs_full_access" {
+resource "aws_iam_role_policy_attachment" "ec2_ecs_container_instance" {
   role       = aws_iam_role.ec2_ecs.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
-}
-
-resource "aws_iam_role_policy_attachment" "ec2_ecs_cloudwatchlogs_full_access" {
-  role       = aws_iam_role.ec2_ecs.name
-  policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
 }
 
 resource "aws_iam_instance_profile" "ec2_ecs" {
