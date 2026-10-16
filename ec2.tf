@@ -70,7 +70,7 @@ resource "aws_autoscaling_group" "ec2_ecs" {
     version = aws_launch_template.ec2_ecs.latest_version
   }
 
-  max_size = var.ecs_service_max_capacity
+  max_size = var.ec2_autoscale_max_capacity
 
   # Minimum of one EC2 VM per zone
   min_size = length(var.ec2_vpc_zone_identifier)
