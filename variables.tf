@@ -57,6 +57,16 @@ variable "ecs_service_max_capacity" {
   default     = 30
 }
 
+variable "ec2_autoscale_max_capacity" {
+  description = "The maximum number of EC2 instances to autoscale up to, should be greater than or equal to ecs_service_max_capacity"
+  default     = 30
+
+  validation {
+    condition     = var.ec2_autoscale_max_capacity >= var.ecs_service_max_capacity
+    error_message = "ec2_autoscale_max_capacity must be greater than or equal to ecs_service_max_capacity"
+  }
+}
+
 variable "control_plane_region" {
   description = "The region of the warpstream control plane"
 }
